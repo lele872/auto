@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Geolocalizzazione</title>
+    <!-- Importazione di Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Importazione del font Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Applica il font Inter a tutto il corpo del documento */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Stile per l'animazione di rotazione */
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .animate-spin-fast {
+            animation: spin 1s linear infinite;
+        }
+    </style>
+</head>
+<body class="bg-white"> <!-- Sfondo bianco come richiesto -->
+
+    <!-- Schermata di Caricamento -->
+    <div id="loader-overlay" class="fixed inset-0 bg-white z-50 flex items-center justify-center transition-opacity duration-500">
+        <div class="text-center p-4">
+            <!-- Icona di caricamento (un ingranaggio stilizzato) -->
+            <svg class="mx-auto h-12 w-12 text-red-600 animate-spin-fast" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527c.47-.336 1.06-.336 1.53 0l.772.55c.47.336.705.956.552 1.468l-.16.73c-.12.543.03.113.38.138.48.03.97.246 1.32.576.35.33.557.78.557 1.256v1.093c0 .476-.207.926-.557 1.256-.35.33-.84.546-1.32.576-.45.025-.5.6-.38.138l.16.73c.153.512-.082 1.132-.552 1.468l-.772.55c-.47.336-1.06.336-1.53 0l-.737-.527c-.35-.25-.807-.272-1.205-.108-.396.165-.71.506-.78.93l-.149.894c-.09.542-.56.94-1.11.94h-1.093c-.55 0-1.02-.398-1.11-.94l-.149-.894c-.07-.424-.384-.764-.78-.93-.398-.164-.855-.142-1.205.108l-.737.527c-.47.336-1.06.336-1.53 0l-.772-.55c-.47-.336-.705-.956-.552-1.468l.16-.73c.12-.543-.03-.113-.38-.138-.48-.03-.97-.246-1.32-.576-.35-.33-.557-.78-.557-1.256v-1.093c0-.476.207-.926.557-1.256.35-.33.84-.546-1.32-.576.45-.025.5-.6.38-.138l-.16-.73c-.153-.512.082-1.132.552-1.468l.772.55c.47.336 1.06-.336 1.53 0l.737.527c.35.25.807.272 1.205.108.396-.165.71.506.78.93l.149-.894z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <p class="mt-4 text-xl font-semibold text-gray-700">Caricamento sito in corso...</p>
+            <p class="text-gray-500 mt-1">Autorizza per continuare.</p>
+        </div>
+    </div>
+
+    <!-- Header, Main e Footer sono stati rimossi. -->
+    <!-- Il corpo della pagina (body) è bianco e vuoto. -->
+
+
+    <!-- Script per la Geolocalizzazione -->
+    <script>
+        // Definisce la variabile globale per salvare la stringa di geolocalizzazione
+        let userLocationString = "";
+
+        // Funzione per mostrare il sito (rimuovendo l'overlay)
+        function showSiteContent() {
+            const loader = document.getElementById('loader-overlay');
+            if (loader) {
+                // Aggiunge una transizione per l'uscita
+                loader.classList.add('opacity-0');
+                // Rimuove l'overlay dal DOM dopo la fine della transizione
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                }, 500); // 500ms = durata della transizione 'duration-500'
+            }
+        }
+
+        // Funzione in caso di successo
+        function successCallback(position) {
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
+
+            // Salva le coordinate nella variabile come stringa, come richiesto
+            userLocationString = `lat: ${latitude}, lon: ${longitude}`;
+
+            // Logga la stringa in console per verifica
+            console.log('Posizione utente salvata:', userLocationString);
+
+            // Mostra il sito (che ora è solo uno schermo bianco)
+            showSiteContent();
+        }
+
+        // Funzione in caso di errore
+        function errorCallback(error) {
+            // Logga l'errore in console
+            console.error('Errore Geolocation:', error.message);
+            switch (error.code) {
+                case error.PERMISSION_DENIED:
+                    console.warn('L\'utente ha negato il permesso per la geolocalizzazione.');
+                    
+                    if (error.message && error.message.includes("permissions policy")) {
+                        console.error("--- SPIEGAZIONE ERRORE POLICY ---");
+                        console.error("L'errore 'Geolocation has been disabled in this document by permissions policy' indica che l'ambiente (probabilmente un iframe di anteprima) sta bloccando la geolocalizzazione.");
+                        console.error("Questo non è un errore nel tuo codice, ma un'impostazione di sicurezza dell'ambiente di esecuzione.");
+                        console.error("Per testare la funzionalità, prova ad aprire questo file HTML direttamente nel tuo browser (File > Apri) o su un server web.");
+                        console.error("--- FINE SPIEGAZIONE ---");
+                    }
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    console.warn('Informazioni sulla posizione non disponibili.');
+                    break;
+                case error.TIMEOUT:
+                    console.warn('La richiesta di geolocalizzazione è scaduta.');
+                    break;
+                default:
+                    console.warn('Si è verificato un errore sconosciuto di geolocalizzazione.');
+                    break;
+            }
+
+            // Mostra il sito (schermo bianco) anche se c'è un errore
+            showSiteContent();
+        }
+
+        // Avvia la richiesta di geolocalizzazione al caricamento del DOM
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // Controlla se la geolocalizzazione è supportata
+            if ('geolocation' in navigator) {
+                console.log('Richiesta di geolocalizzazione al caricamento della pagina...');
+                
+                const options = {
+                    enableHighAccuracy: true,
+                    timeout: 10000, // 10 secondi
+                    maximumAge: 0
+                };
+                // Richiede la posizione. Il pop-up apparirà ora.
+                navigator.geolocation.getCurrentPosition(successCallback, errorCallback, options);
+
+            } else {
+                console.error('La geolocalizzazione non è supportata da questo browser.');
+                // Se non è supportata, mostra comunque il sito (schermo bianco)
+                showSiteContent();
+            }
+        });
+    </script>
+
+</body>
+</html>
