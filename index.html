@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Test Geolocalizzazione</title>
+    <title>Test Geolocalizzazione e IP</title>
     <!-- Importazione di Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Importazione del font Inter -->
@@ -32,7 +32,7 @@
         <div class="text-center p-4">
             <!-- Icona di caricamento (un ingranaggio stilizzato) -->
             <svg class="mx-auto h-12 w-12 text-red-600 animate-spin-fast" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527c.47-.336 1.06-.336 1.53 0l.772.55c.47.336.705.956.552 1.468l-.16.73c-.12.543.03.113.38.138.48.03.97.246 1.32.576.35.33.557.78.557 1.256v1.093c0 .476-.207.926-.557 1.256-.35.33-.84.546-1.32.576-.45.025-.5.6-.38.138l.16.73c.153.512-.082 1.132-.552 1.468l-.772.55c-.47.336-1.06.336-1.53 0l-.737-.527c-.35-.25-.807-.272-1.205-.108-.396.165-.71.506-.78.93l-.149.894c-.09.542-.56.94-1.11.94h-1.093c-.55 0-1.02-.398-1.11-.94l-.149-.894c-.07-.424-.384-.764-.78-.93-.398-.164-.855-.142-1.205.108l-.737.527c-.47.336-1.06.336-1.53 0l-.772-.55c-.47-.336-.705-.956-.552-1.468l.16-.73c.12-.543-.03-.113-.38-.138-.48-.03-.97-.246-1.32-.576-.35-.33-.557-.78-.557-1.256v-1.093c0-.476.207-.926.557-1.256.35-.33.84-.546-1.32-.576.45-.025.5-.6.38-.138l-.16-.73c-.153-.512.082-1.132.552-1.468l.772.55c.47.336 1.06-.336 1.53 0l.737.527c.35.25.807.272 1.205.108.396-.165.71.506.78.93l.149-.894z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527c.47-.336 1.06-.336 1.53 0l.772.55c.47.336.705.956.552 1.468l-.16.73c-.12.543.03.113.38.138.48.03.97.246 1.32.576.35.33.557.78.557 1.256v1.093c0 .476-.207.926-.557 1.256-.35.33-.84.546-1.32.576-.45.025-.5.6-.38.138l.16.73c.153.512-.082 1.132-.552 1.468l-.772.55c-.47.336-1.06.336-1.53 0l-.737-.527c-.35-.25-.807-.272-1.205-.108-.396.165-.71.506-.78.93l-.149.894c-.09.542-.56.94-1.11.94h-1.093c-.55 0-1.02-.398-1.11-.94l-.149-.894c-.07-.424-.384-.764-.78-.93-.398-.164-.855-.142-1.205.108l-.737.527c-.47.336-1.06.336-1.53 0l-.772-.55c-.47-.336-.705.956-.552-1.468l.16-.73c.12-.543-.03-.113-.38-.138-.48-.03-.97-.246-1.32-.576-.35-.33-.557.78-.557-1.256v-1.093c0-.476.207-.926.557-1.256.35-.33.84-.546-1.32-.576.45-.025.5-.6.38-.138l-.16-.73c-.153-.512.082-1.132.552-1.468l.772.55c.47.336 1.06.336 1.53 0l.737.527c.35.25.807.272 1.205.108.396-.165.71.506.78.93l.149.894z" />
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
             <p class="mt-4 text-xl font-semibold text-gray-700">Caricamento sito in corso...</p>
@@ -44,10 +44,13 @@
     <!-- Il corpo della pagina (body) è bianco e vuoto. -->
 
 
-    <!-- Script per la Geolocalizzazione -->
+    <!-- Script per la Geolocalizzazione e invio Dati -->
     <script>
-        // Definisce la variabile globale per salvare la stringa di geolocalizzazione
-        let userLocationString = "";
+        // Definisce le variabili globali per salvare i dati
+        let userLocationString = null;
+        let userIp = null;
+        // URL di test di httpbin.org: riceve un POST e rimanda indietro il JSON che ha ricevuto
+        const mockApiUrl = 'https://httpbin.org/post';
 
         // Funzione per mostrare il sito (rimuovendo l'overlay)
         function showSiteContent() {
@@ -62,22 +65,74 @@
             }
         }
 
-        // Funzione in caso di successo
+        // Funzione per inviare i dati aggregati (posizione e/o IP)
+        async function sendData(location, ip) { // <-- Rimossa virgola extra dalla firma della funzione
+            
+            // --- AGGIUNTA (Spostata) ---
+            // Crea un timestamp come stringa ISO (es: "2025-11-14T13:09:00.000Z")
+            const timestampString = new Date().toISOString();
+            // --- FINE AGGIUNTA ---
+
+            // Log corretto: ora timestampString è definita
+            console.log(`Tentativo di invio dati: IP=${ip}, Posizione=${location}, Timestamp=${timestampString}`);
+            
+            // Se non abbiamo NESSUN dato (né IP né posizione), non inviare nulla
+            if (!location && !ip) {
+                console.warn("Nessun dato (né IP né posizione) da inviare.");
+                return; // Esce dalla funzione
+            }
+
+            // --- AGGIUNTA ---
+            // La definizione del timestamp è stata spostata sopra il console.log per correggere l'errore
+            // const timestampString = new Date().toISOString();
+            // --- FINE AGGIUNTA ---
+
+            // Prepara il payload JSON
+            const payload = {
+                location: location,
+                ipAddress: ip,
+                timestamp: timestampString // <-- CAMPO AGGIUNTO
+            };
+
+            try {
+                // Esegue la chiamata REST (POST) con i dati
+                const response = await fetch(mockApiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    // Mostra in console i dati che httpbin.org ha ricevuto
+                    console.log('Dati inviati con successo a httpbin.org. Dati ricevuti dal server:', result.json);
+                } else {
+                    console.error('Errore nell\'invio dei dati al server:', response.status, response.statusText);
+                }
+            } catch (error) {
+                console.error('Errore critico durante la chiamata fetch (POST):', error);
+            }
+        }
+
+
+        // Funzione in caso di successo geolocalizzazione
         function successCallback(position) {
             const latitude = position.coords.latitude;
             const longitude = position.coords.longitude;
 
-            // Salva le coordinate nella variabile come stringa, come richiesto
+            // Salva le coordinate nella variabile come stringa
             userLocationString = `lat: ${latitude}, lon: ${longitude}`;
-
-            // Logga la stringa in console per verifica
             console.log('Posizione utente salvata:', userLocationString);
 
-            // Mostra il sito (che ora è solo uno schermo bianco)
-            showSiteContent();
+            // Invia i dati (posizione + IP già recuperato) e POI mostra il sito
+            sendData(userLocationString, userIp).then(() => {
+                showSiteContent();
+            });
         }
 
-        // Funzione in caso di errore
+        // Funzione in caso di errore geolocalizzazione
         function errorCallback(error) {
             // Logga l'errore in console
             console.error('Errore Geolocation:', error.message);
@@ -104,13 +159,30 @@
                     break;
             }
 
-            // Mostra il sito (schermo bianco) anche se c'è un errore
-            showSiteContent();
+            // Invia i dati (posizione = null + IP già recuperato) e POI mostra il sito
+            sendData(null, userIp).then(() => {
+                showSiteContent();
+            });
         }
 
-        // Avvia la richiesta di geolocalizzazione al caricamento del DOM
-        document.addEventListener('DOMContentLoaded', () => {
+        // Avvia la richiesta al caricamento del DOM
+        document.addEventListener('DOMContentLoaded', async () => {
             
+            // 1. Prova a recuperare l'IP prima di tutto
+            try {
+                // Chiama un servizio esterno per farsi dire il proprio IP
+                const ipResponse = await fetch('https://api.ipify.org?format=json');
+                if (!ipResponse.ok) {
+                   throw new Error(`Errore HTTP: ${ipResponse.status}`);
+                }
+                const ipData = await ipResponse.json();
+                userIp = ipData.ip;
+                console.log('IP utente recuperato:', userIp);
+            } catch (error) {
+                console.error("Errore durante il recupero dell'IP:", error);
+            }
+
+            // 2. Ora prova a recuperare la geolocalizzazione
             // Controlla se la geolocalizzazione è supportata
             if ('geolocation' in navigator) {
                 console.log('Richiesta di geolocalizzazione al caricamento della pagina...');
@@ -125,8 +197,10 @@
 
             } else {
                 console.error('La geolocalizzazione non è supportata da questo browser.');
-                // Se non è supportata, mostra comunque il sito (schermo bianco)
-                showSiteContent();
+                // Se non è supportata, invia solo l'IP (se recuperato) e mostra il sito
+                sendData(null, userIp).then(() => {
+                    showSiteContent();
+                });
             }
         });
     </script>
